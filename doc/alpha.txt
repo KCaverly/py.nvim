@@ -1,0 +1,10 @@
+
+===============================================================================
+                                                                *poetry.nvim*
+
+poetry.nvim is a plugin for demo purpose. Development is in progress.
+
+To find out more:
+https://github.com/KCaverly/poetry.nvim
+
+=================================================================================
