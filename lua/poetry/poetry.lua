@@ -1,11 +1,58 @@
 local Path = require'plenary.path'
 local scan = require'plenary.scandir'
+local ts_utils = require("nvim-treesitter.ts_utils")
 
 local M = {}
 
-function M.testFunction()
-  print("Test")  
-end 
+M.term = {
+  opened = 0,
+  win_id = nil,
+  buf_id = nil,
+  chan_id = nil
+}
+
+function M.getImports()
+  
+  local bufn = vim.api.nvim_get_current_buf()
+
+  root = ts_utils.get_root_for_position(1, 1, nil)
+  print(root)
+
+  local import_nodes = {}
+  for k, v in pairs(ts_utils.get_named_children(root)) do
+    if v:type() == 'import_statement' then 
+      table.insert(import_nodes, v)
+    end
+
+    if v:type() == 'import_from_statement' then
+      table.insert(import_nodes, v)
+    end
+  end
+
+  local import_text = ''
+  for k, v in pairs(import_nodes) do
+    local node_text = ts_utils.get_node_text(v)
+    
+    for j, v in pairs(node_text) do
+      if import_text ~= '' then
+        import_text = import_text.."\r"..v
+      else
+        import_text = v
+      end
+    end
+
+  end
+
+  return import_text
+
+end
+
+function M.sendImportsToIPython()
+
+  local message = M.getImports()
+  M.sendToIPython(message)
+  
+end
 
 function M.findPoetry()
 
@@ -37,7 +84,13 @@ function M.findPoetry()
   return nil
 end
 
-function M.sendToIPython()
+function M.sendToIPython(message)
+  
+  message = vim.api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+
+  if M.term.chan_id ~= nil then
+    vim.api.nvim_chan_send(M.term.chan_id, message)
+  end
 
 end
 
@@ -73,7 +126,29 @@ function M.launchIPython()
   end
 
   -- Launch Terminal
-  vim.api.nvim_exec(":term "..ipython_str, 0)
+  if M.config.open_in_vsplit == 1 then
+    vim.api.nvim_exec(':vsplit', 0)
+  end
+  
+  local bufn = vim.api.nvim_create_buf(true, true)
+  local current_win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(current_win, bufn)
+
+  -- ipython_str = "cd "..poetry_dir.." && poetry run ipython"
+  
+  local chan = vim.fn.termopen(ipython_str, {
+    on_exit = function()
+      M.term.opened = 0
+      M.term.win_id = current_win
+      M.term.buf_id = bufn
+      M.term.chan_id = chan
+    end
+  })
+
+  M.term.opened = 1
+  M.term.win_id = current_win
+  M.term.buf_id = bufn
+  M.term.chan_id = chan
 
 end
 
@@ -83,6 +158,7 @@ do
     max_depth = 0,
     mappings = true, 
     leader = "<space>p",
+    open_in_vsplit = 1,
     poetry_every_install = 1,
     ipython_auto_install = 1,
     ipython_auto_reload = 1
