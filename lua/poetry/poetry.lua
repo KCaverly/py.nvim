@@ -54,14 +54,10 @@ function M.sendImportsToIPython()
   
 end
 
-function M.findPoetry()
-
-  local cwd = vim.fn.getcwd()
-  local current_path = vim.api.nvim_exec(":echo @%", 1)
+function M.findPoetry(current_path, cwd)
 
   -- Ensure Current File is .py
   filetype = require("plenary.filetype").detect(current_path)
-
   if filetype == 'python' then
 
     parents = Path:new(current_path):parents()
@@ -95,14 +91,22 @@ function M.sendToIPython(message)
 end
 
 function M.launchIPython() 
-
-  local poetry_dir, poetry_file = M.findPoetry()
-
-  if poetry_dir == nil then
-    print("Poetry File Note Found in: "..vim.fn.getcwd())
-    return nil
-  end
   
+  -- Get current details
+  local launch_buf = vim.api.nvim_get_current_buf()
+  local cwd = vim.fn.getcwd()
+  local current_path = vim.api.nvim_exec(":echo @%", 1)
+
+  -- Ensure Current File is .py
+  local filetype = require("plenary.filetype").detect(current_path)
+
+  -- Get Poetry File in Parent
+  if filetype == 'python' then
+    poetry_dir, poetry_file = M.findPoetry(current_path, cwd)
+  else 
+    print('Current File is not Python File')
+  end
+
   -- Launch Terminal in Split
   ipython_str = "cd "..poetry_dir
 
@@ -119,7 +123,11 @@ function M.launchIPython()
   end
 
   -- Start IPython
-  ipython_str = ipython_str.." && poetry run ipython --TerminalInteractiveShell.editing_mode=vi"
+  ipython_str = ipython_str.." && poetry run ipython"
+
+  if M.config.ipython_editor_vi == 1 then
+    ipython_str = ipython_str.." --TerminalInteractiveShell.editing_mode=vi"
+  end
 
   if M.config.ipython_auto_reload == 1 then
     ipython_str = ipython_str.." --ext=autoreload --InteractiveShellApp.exec_lines='autoreload 2'"
@@ -161,7 +169,9 @@ do
     open_in_vsplit = 1,
     poetry_every_install = 1,
     ipython_auto_install = 1,
-    ipython_auto_reload = 1
+    ipython_editor_vi = 0,
+    ipython_auto_reload = 1,
+    send_imports = 1
   }
   
   function M.setup(user_config)
