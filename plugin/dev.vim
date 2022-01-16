@@ -1,7 +1,7 @@
 function! ReloadAlpha()
 lua << EOF
     for k in pairs(package.loaded) do 
-        if k:match("^poetry") then
+        if k:match("^py") then
             package.loaded[k] = nil
         end
     end

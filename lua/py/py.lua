@@ -1,6 +1,7 @@
 local Path = require'plenary.path'
 local scan = require'plenary.scandir'
-local ts_utils = require("nvim-treesitter.ts_utils")
+local poetry = require("py.poetry")
+local text_objects = require("py.text_objects")
 
 local M = {}
 
@@ -11,89 +12,17 @@ M.term = {
   chan_id = nil
 }
 
-function M.getImports()
-  
-  local bufn = vim.api.nvim_get_current_buf()
 
-  root = ts_utils.get_root_for_position(1, 1, nil)
-  print(root)
 
-  local import_nodes = {}
-  for k, v in pairs(ts_utils.get_named_children(root)) do
-    if v:type() == 'import_statement' then 
-      table.insert(import_nodes, v)
-    end
-
-    if v:type() == 'import_from_statement' then
-      table.insert(import_nodes, v)
-    end
-  end
-
-  local import_text = ''
-  for k, v in pairs(import_nodes) do
-    local node_text = ts_utils.get_node_text(v)
-    
-    for j, v in pairs(node_text) do
-      if import_text ~= '' then
-        import_text = import_text.."\r"..v
-      else
-        import_text = v
-      end
-    end
-
-  end
-
-  return import_text
-
-end
-
-function M.sendImportsToIPython()
-
-  local message = M.getImports()
-  M.sendToIPython(message)
-  
-end
-
-function M.findPoetry(current_path, cwd)
-
-  -- Ensure Current File is .py
-  filetype = require("plenary.filetype").detect(current_path)
-  if filetype == 'python' then
-
-    parents = Path:new(current_path):parents()
-    for i, parent in pairs(parents) do
-
-      files = scan.scan_dir(parent, { hideen = false, depth = 1})
-      for j, file in pairs(files) do
-        if file == parent.."/".."pyproject.toml" then
-          return parent, file
-        end
-      end
-
-      -- Stop Loop at Parent Directory
-      if parent == cwd then
-        break
-      end
-    end
-  end
-
-  return nil
-end
-
-function M.sendToIPython(message)
-  
-  message = vim.api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
-
-  if M.term.chan_id ~= nil then
-    vim.api.nvim_chan_send(M.term.chan_id, message)
-  end
-
-end
+-------------------------
+--IPYTHON FUNCTIONALITY--
+-------------------------
 
 function M.launchIPython() 
-  
+
   -- Get current details
   local launch_buf = vim.api.nvim_get_current_buf()
+  local launch_win = vim.api.nvim_get_current_win()
   local cwd = vim.fn.getcwd()
   local current_path = vim.api.nvim_exec(":echo @%", 1)
 
@@ -102,9 +31,14 @@ function M.launchIPython()
 
   -- Get Poetry File in Parent
   if filetype == 'python' then
-    poetry_dir, poetry_file = M.findPoetry(current_path, cwd)
+    poetry_dir, poetry_file = poetry.findPoetry(current_path, cwd)
   else 
     print('Current File is not Python File')
+  end
+
+  if poetry_dir == nil then
+    print("No pyproject.toml found in Parents")
+    return nil
   end
 
   -- Launch Terminal in Split
@@ -123,7 +57,7 @@ function M.launchIPython()
   end
 
   -- Start IPython
-  ipython_str = ipython_str.." && poetry run ipython"
+  ipython_str = ipython_str.." && clear && poetry run ipython"
 
   if M.config.ipython_editor_vi == 1 then
     ipython_str = ipython_str.." --TerminalInteractiveShell.editing_mode=vi"
@@ -142,8 +76,6 @@ function M.launchIPython()
   local current_win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(current_win, bufn)
 
-  -- ipython_str = "cd "..poetry_dir.." && poetry run ipython"
-  
   local chan = vim.fn.termopen(ipython_str, {
     on_exit = function()
       M.term.opened = 0
@@ -158,6 +90,38 @@ function M.launchIPython()
   M.term.buf_id = bufn
   M.term.chan_id = chan
 
+  if M.config.send_imports == 1 then
+    vim.api.nvim_set_current_win(launch_win)
+    M.sendImportsToIPython()
+  else
+    vim.api.nvim_set_current_win(M.term.win_id)
+  end
+
+end
+
+
+function M.sendToIPython(message)
+  
+  message = vim.api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
+
+  if M.term.chan_id ~= nil then
+    vim.api.nvim_chan_send(M.term.chan_id, message)
+    vim.api.nvim_set_current_win(M.term.win_id)
+    vim.api.nvim_exec(":startinsert", 0)
+  end
+
+end
+
+function M.sendImportsToIPython()
+
+  local message = text_objects.getImports()
+  M.sendToIPython(message)
+  
+end
+
+function M.sendObjectsToIPython()
+  local message = text_objects.getObject()
+  M.sendToIPython(message)
 end
 
 do
@@ -187,7 +151,7 @@ do
 
     -- Set mappings
     if M.config.mappings == true then
-      require('poetry/mappings').set_mappings()
+      require('py/mappings').set_mappings()
     end 
 
   end
