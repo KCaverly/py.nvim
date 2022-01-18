@@ -5,13 +5,19 @@ local text_objects = require("py.text_objects")
 
 local M = {}
 
-M.term = {
+M.ipython = {
   opened = 0,
   win_id = nil,
   buf_id = nil,
   chan_id = nil
 }
 
+M.pytest = {
+  opened = 0,
+  win_id = nil,
+  buf_id = nil,
+  chan_id = nil
+}
 
 
 -------------------------
@@ -52,7 +58,7 @@ function M.launchIPython()
 
   -- If poetry_every_install
   -- Run 'poetry install' on every launch
-  if M.config.poetry_every_install == 1 then
+  if M.config.poetry_isntall_every == 1 then
     ipython_str = ipython_str.." && poetry install"
   end
 
@@ -68,7 +74,7 @@ function M.launchIPython()
   end
 
   -- Launch Terminal
-  if M.config.open_in_vsplit == 1 then
+  if M.config.ipython_in_vsplit == 1 then
     vim.api.nvim_exec(':vsplit', 0)
   end
   
@@ -78,35 +84,56 @@ function M.launchIPython()
 
   local chan = vim.fn.termopen(ipython_str, {
     on_exit = function()
-      M.term.opened = 0
-      M.term.win_id = current_win
-      M.term.buf_id = bufn
-      M.term.chan_id = chan
+      M.ipython.opened = 0
+      M.ipython.win_id = current_win
+      M.ipython.buf_id = bufn
+      M.ipython.chan_id = chan
     end
   })
 
-  M.term.opened = 1
-  M.term.win_id = current_win
-  M.term.buf_id = bufn
-  M.term.chan_id = chan
+  M.ipython.opened = 1
+  M.ipython.win_id = current_win
+  M.ipython.buf_id = bufn
+  M.ipython.chan_id = chan
 
-  if M.config.send_imports == 1 then
+  if M.config.ipython_send_imports == 1 then
     vim.api.nvim_set_current_win(launch_win)
     M.sendImportsToIPython()
   else
-    vim.api.nvim_set_current_win(M.term.win_id)
+    vim.api.nvim_set_current_win(M.ipython.win_id)
   end
 
 end
 
+function M.killIPython()
+
+  current_win = vim.api.nvim_get_current_win()
+  
+  if M.ipython.opened == 1 then
+    vim.api.nvim_set_current_win(M.ipython.win_id)
+    vim.api.nvim_input('<ESC>')
+    vim.api.nvim_input(':bd!<CR>')
+  end
+
+end
+
+function M.toggleIPython()
+
+  if M.ipython.opened == 1 then
+    M.killIPython()
+  else
+    M.launchIPython()
+  end
+
+end
 
 function M.sendToIPython(message)
   
   message = vim.api.nvim_replace_termcodes("<esc>[200~" .. message .. "<esc>[201~", true, false, true)
 
-  if M.term.chan_id ~= nil then
-    vim.api.nvim_chan_send(M.term.chan_id, message)
-    vim.api.nvim_set_current_win(M.term.win_id)
+  if M.ipython.chan_id ~= nil then
+    vim.api.nvim_chan_send(M.ipython.chan_id, message)
+    vim.api.nvim_set_current_win(M.ipython.win_id)
     vim.api.nvim_exec(":startinsert", 0)
   end
 
@@ -127,15 +154,23 @@ end
 do
 
   local default_config = {
-    max_depth = 0,
-    mappings = true, 
+
+    -- Setting Default Mappings
+    mappings = true,
+
+    -- Default Leader
     leader = "<space>p",
-    open_in_vsplit = 1,
-    poetry_every_install = 1,
+
+    -- Poetry Settings
+    poetry_install_every = 1,
+
+    -- IPython Settings
+    ipython_in_vsplit = 1,
     ipython_auto_install = 1,
     ipython_editor_vi = 0,
     ipython_auto_reload = 1,
-    send_imports = 1
+    ipython_send_imports = 1
+
   }
   
   function M.setup(user_config)

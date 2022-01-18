@@ -8,7 +8,7 @@ function M.map(key, rhs)
 end
 
 function M.set_mappings()
-  M.map("p", "<cmd>lua require('py').launchIPython()<CR>")
+  M.map("p", "<cmd>lua require('py').toggleIPython()<CR>")
   M.map("c", "<cmd>lua require('py').sendObjectsToIPython()<CR>")
 end
 
