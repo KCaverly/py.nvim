@@ -5,6 +5,23 @@ local scan = require("plenary.scandir")
 local M = {}
 
 
+function M.testOpts(opts)
+
+  local opts = opts or {silent = false}
+
+  print(opts.silent)
+
+  if opts.silent == nil then
+    print("NIL")
+  elseif opts.silent == true then
+    print("SILENT")
+  elseif opts.silent == false then
+    print("NOT SILENT")
+  end
+
+end
+
+
 function M.findPoetry()
 
   -- Get Current Details
@@ -42,7 +59,9 @@ function M.parseDependency(package)
 
 end
 
-function M.addDependency(package)
+function M.addDependency(package, opts)
+
+  opts = opts or {silent = false}
 
   poetry_dir, _ = M.findPoetry()
 
@@ -50,7 +69,9 @@ function M.addDependency(package)
     return nil
   end
   
-  require("notify")("Adding "..package.." to Poetry Environment", "info", { title = "py.nvim" })
+  if opts.silent ~= true then
+    require("notify")("Adding "..package.." to Poetry Environment", "info", { title = "py.nvim" })
+  end
 
   Job:new({
     command = "poetry",
@@ -64,10 +85,14 @@ function M.addDependency(package)
           table.insert(res, val)
         end
 
-        require("notify")(res, "error", { title = "py.nvim" })
+        if opts.silent ~= true then
+          require("notify")(res, "error", { title = "py.nvim" })
+        end
 
       else
-        require("notify")("Added Successfully: "..package, "info", { title = "py.nvim" })
+        if opts.silent ~= true then
+          require("notify")("Added Successfully: "..package, "info", { title = "py.nvim" })
+        end
       end
 
     end
