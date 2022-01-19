@@ -30,36 +30,58 @@ function M.findPoetry()
 end
 
 
-function M.addDependency()
+function M.parseDependency(package)
 
-  vim.ui.input({ prompt = "Add Package: " },
-  function(package)
+  args = {'add'}
+  sep = ' '
+  for str in string.gmatch(package, "([^"..sep.."]+)") do
+    table.insert(args, str)
+  end
 
-    require("notify")("Adding "..package.." to Poetry Environment", "info",
-                      { title = "py.nvim" })
+  return args
 
-    poetry_dir, _ = M.findPoetry()
+end
 
-    Job:new({
-      command = "poetry",
-      args = {'add', package},
-      cwd = poetry_dir,
-      on_exit = function(j, return_val)
+function M.addDependency(package)
 
+  poetry_dir, _ = M.findPoetry()
+
+  if poetry_dir == nil then
+    return nil
+  end
+  
+  require("notify")("Adding "..package.." to Poetry Environment", "info", { title = "py.nvim" })
+
+  Job:new({
+    command = "poetry",
+    args = M.parseDependency(package),
+    cwd = poetry_dir,
+    on_exit = function(j, return_val)
+
+      if return_val == 1 then
         res = {}
         for k, val in pairs(j:result()) do
           table.insert(res, val)
         end
-        
-        if return_val == 0 then
-          require("notify")("Added Successfully: "..package, 
-                            "info", { title = "py.nvim" })
-        else
-          require("notify")(res, "error", { title = "py.nvim" })
-        end
 
+        require("notify")(res, "error", { title = "py.nvim" })
+
+      else
+        require("notify")("Added Successfully: "..package, "info", { title = "py.nvim" })
       end
-    }):start()
+
+    end
+
+  }):start()
+
+end
+
+function M.inputDependency()
+
+  vim.ui.input({ prompt = "Add Package: " },
+  function(package)
+    
+    add(package, {silent=false})
 
   end)
 

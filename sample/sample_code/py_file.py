@@ -6,7 +6,7 @@ class Test:
         pass
 
 def test_2():
-    print('')
+   print('')
 
 import os
 import pandas as pd
@@ -14,4 +14,3 @@ from datetime import date
 
 def test_func():
     print('Test')
-

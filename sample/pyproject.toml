@@ -7,11 +7,11 @@ authors = ["KCaverly <kylebcaverly@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ipython = "^8.0.0"
+pandas = "1.2.4"
 
 [tool.poetry.dev-dependencies]
-ipython = "^8.0.0"
 pytest = "^6.2.5"
+ipython = "^8.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
