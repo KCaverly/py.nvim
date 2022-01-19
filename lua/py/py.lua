@@ -1,4 +1,5 @@
 local Path = require'plenary.path'
+local Job = require("plenary.job")
 local scan = require'plenary.scandir'
 local poetry = require("py.poetry")
 local text_objects = require("py.text_objects")
@@ -13,10 +14,9 @@ M.ipython = {
 }
 
 M.pytest = {
-  opened = 0,
-  win_id = nil,
-  buf_id = nil,
-  chan_id = nil
+  status = nil,
+  failed = nil,
+  result = nil
 }
 
 
@@ -149,6 +149,72 @@ end
 function M.sendObjectsToIPython()
   local message = text_objects.getObject()
   M.sendToIPython(message)
+end
+
+-------------------------
+--PYTEST FUNCTIONALITY--
+-------------------------
+
+function M.showPytestResult()
+
+  if M.pytest.status == 'running' then
+    require("notify")("Running tests...", "info", {title="py.nvim"})
+  elseif M.pytest.status == 'complete' then 
+
+    if M.pytest.failed == 1 then
+
+      require("notify")(M.pytest.result, "error", 
+      {
+        title = "py.nvim"
+      })
+
+    else
+
+      require("notify")(M.pytest.result, "info",
+      {
+        title = "py.nvim"
+      })
+
+    end
+  end
+
+end
+
+function M.launchPytest()
+
+  local cwd = vim.fn.getcwd()
+  local current_path = vim.api.nvim_exec(":echo @%", 1)
+  local poetry_dir = poetry.findPoetry(current_path, cwd)
+
+  -- notify
+  if M.pytest.status == 'running' then
+    M.showPytestResult()
+  else
+    require("notify")("Launching pytest...", "info", {title="py.nvim"})
+
+    Job:new({
+      command = "poetry",
+      args = {'run', 'pytest'},
+      cwd = poetry_dir,
+      on_start = function() M.pytest.status = "running" end,
+      on_exit = function(j, return_val)
+
+        local res = {}
+        for k, val in pairs(j:result()) do
+          table.insert(res, val)
+        end
+
+        -- Set Outcome
+        M.pytest.status = "complete"
+        M.pytest.failed = return_val
+        M.pytest.result = res
+
+        M.showPytestResult()
+
+      end
+    }):start()
+  end
+
 end
 
 do
