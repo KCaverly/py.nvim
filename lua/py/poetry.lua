@@ -106,7 +106,7 @@ function M.inputDependency()
   vim.ui.input({ prompt = "Add Package: " },
   function(package)
     
-    add(package, {silent=false})
+    M.addDependency(package, {silent=false})
 
   end)
 
