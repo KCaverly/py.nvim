@@ -5,23 +5,6 @@ local scan = require("plenary.scandir")
 local M = {}
 
 
-function M.testOpts(opts)
-
-  local opts = opts or {silent = false}
-
-  print(opts.silent)
-
-  if opts.silent == nil then
-    print("NIL")
-  elseif opts.silent == true then
-    print("SILENT")
-  elseif opts.silent == false then
-    print("NOT SILENT")
-  end
-
-end
-
-
 function M.findPoetry()
 
   -- Get Current Details
@@ -109,6 +92,16 @@ function M.inputDependency()
     M.addDependency(package, {silent=false})
 
   end)
+
+end
+
+function M.install()
+
+  Job:new({
+    command = "poetry",
+    args = {"install"},
+    cwd = poetry_dir
+  }):start() 
 
 end
 

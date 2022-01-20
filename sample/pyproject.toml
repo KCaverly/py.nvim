@@ -10,7 +10,6 @@ python = "^3.8"
 pandas = "1.2.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
 ipython = "^8.0.1"
 
 [build-system]

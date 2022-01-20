@@ -10,7 +10,6 @@ local default_config = {
 
   ipython_in_vsplit = 1,
   ipython_auto_install = 1,
-  ipython_editor_vi = 0,
   ipython_auto_reload = 1,
   ipython_send_imports = 1
 
@@ -48,11 +47,7 @@ function M.ipython_in_vsplit()
 end
 
 function M.ipython_auto_install()
-  return M.config.poetry_auto_install
-end
-
-function M.ipython_editor_vi()
-  return M.config.ipython_editor_vi
+  return M.config.ipython_auto_install
 end
 
 function M.ipython_auto_reload()

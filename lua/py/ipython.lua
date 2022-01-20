@@ -1,5 +1,6 @@
 local poetry = require("py.poetry")
 local config = require("py.config")
+local text_objects = require("py.text_objects")
 
 local M = {}
 
@@ -34,20 +35,96 @@ function M.launchIPython()
     poetry.addDependency('--dev ipython', {silent = true})
   end
 
+  -- Run Poetry Install Automatically
+  if config.poetry_install_every() == 1 then
+    poetry.install()
+  end
+
+  -- Navigate to the IPython
+  ipython_str = "cd "..poetry_dir.." && clear && clear && poetry run ipython"
+  
+  -- Run AutoReload on Launch
+  if config.ipython_auto_reload() == 1 then
+    ipython_str = ipython_str.." --ext=autoreload --InteractiveShellApp.exec_lines='autoreload 2'"
+  end
+
+  -- Launch Terminal
+  if config.ipython_in_vsplit() == 1 then
+    vim.api.nvim_exec(':vsplit', 0)
+  end
+
+  local bufn = vim.api.nvim_create_buf(true, true)
+  local current_win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(current_win, bufn)
+
+
+  local chan = vim.fn.termopen(ipython_str, {
+    on_exit = function()
+      M.ipython.opened = 0
+      M.ipython.win_id = current_win
+      M.ipython.buf_id = bufn
+      M.ipython.chan_id = chan
+    end
+  })
+
+  M.ipython.opened = 1
+  M.ipython.win_id = current_win
+  M.ipython.buf_id = bufn
+  M.ipython.chan_id = chan
+
+  if config.ipython_send_imports() == 1 then
+    vim.api.nvim_set_current_win(launch_win)
+    M.sendImportsToIPython()
+  else
+    vim.api.nvim_set_current_win(M.ipython_win_id)
+  end
+
 end
 
 
 function M.killIPython()
+
+  if M.ipython.opened == 1 then
+    vim.api.nvim_set_current_win(M.ipython.win_id)
+    vim.api.nvim_input('<ESC>')
+    vim.api.nvim_input(':bd!<CR>')
+  end
 
 end
 
 
 function M.toggleIPython()
 
+  if M.ipython.opened == 1 then
+    M.killIPython()
+  else
+    M.launchIPython()
+  end
+
 end
 
 
+function M.sendToIPython(message)
+
+  message = vim.api.nvim_replace_termcodes("<esc>[200~"..message.."<esc>[201~", true, false, true)
+
+  if M.ipython.chan_id ~= nil then
+    vim.api.nvim_chan_send(M.ipython.chan_id, message)
+    vim.api.nvim_set_current_win(M.ipython.win_id)
+    vim.api.nvim_exec(":startinsert", 0)
+  end
+
+end
 
 
+function M.sendImportsToIPython()
+  local message = text_objects.getImports()
+  M.sendToIPython(message)
+end
+
+function M.sendObjectsToIPython()
+  local message = text_objects.getObject()
+  M.sendToIPython(message)
+end
 
 return M
