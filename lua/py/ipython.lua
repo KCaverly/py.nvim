@@ -119,12 +119,16 @@ end
 
 function M.sendImportsToIPython()
   local message = text_objects.getImports()
-  M.sendToIPython(message)
+  if message ~= nil then
+    M.sendToIPython(message)
+  end
 end
 
 function M.sendObjectsToIPython()
   local message = text_objects.getObject()
-  M.sendToIPython(message)
+  if message ~= nil then
+    M.sendToIPython(message)
+  end
 end
 
 return M

@@ -19,6 +19,11 @@ end
 
 function M.getObject(bufn)
   local node = M.getStatementDefinition()
+
+  if node == nil then
+    return nil
+  end
+
   local bufn = bufn or vim.api.nvim_get_current_buf()
   local text = ts_utils.get_node_text(node, bufn)
   local _, start_column, _, _ = node:range()
@@ -33,6 +38,10 @@ end
 function M.getImports()
   
   root = ts_utils.get_root_for_position(1, 1, nil)
+
+  if root == nil then
+    return nil
+  end
 
   local import_nodes = {}
   for k, v in pairs(ts_utils.get_named_children(root)) do
