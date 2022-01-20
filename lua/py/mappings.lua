@@ -12,8 +12,8 @@ function M.set_mappings()
   M.map("c", "<cmd>lua require('py.ipython').sendObjectsToIPython()<CR>")
 
 
-  M.map("t", "<cmd>lua require('py').launchPytest()<CR>")
-  M.map("r", "<cmd>lua require('py').showPytestResult()<CR>")
+  M.map("t", "<cmd>lua require('py.pytest').launchPytest()<CR>")
+  M.map("r", "<cmd>lua require('py.pytest').showPytestResult()<CR>")
 
   -- Poetry Mappings
   M.map("d", "<cmd>lua require('py.poetry').addDependency()<CR>")
