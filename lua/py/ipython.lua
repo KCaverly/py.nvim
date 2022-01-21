@@ -131,4 +131,11 @@ function M.sendObjectsToIPython()
   end
 end
 
+function M.sendHighlightsToIPython()
+  local message = text_objects.getHighlighted()
+  if message ~= nil then
+    M.sendToIPython(message)
+  end
+end
+
 return M

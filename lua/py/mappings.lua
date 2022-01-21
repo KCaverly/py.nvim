@@ -2,21 +2,25 @@ local config = require("py.config")
 
 local M = {}
 
-function M.map(key, rhs)
+function M.map(mode, key, rhs)
   local lhs = string.format("%s%s", config.leader(), key)
-  vim.api.nvim_set_keymap("n", lhs, rhs, {noremap = true, silent = true})
+  vim.api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true})
 end
 
 function M.set_mappings()
-  M.map("p", "<cmd>lua require('py.ipython').toggleIPython()<CR>")
-  M.map("c", "<cmd>lua require('py.ipython').sendObjectsToIPython()<CR>")
 
+  -- IPython Mappings
+  M.map("n", "p", "<cmd>lua require('py.ipython').toggleIPython()<CR>")
+  M.map("n", "c", "<cmd>lua require('py.ipython').sendObjectsToIPython()<CR>")
+  M.map("v", "c", '"zy:lua require("py.ipython").sendHighlightsToIPython()<CR>')
 
-  M.map("t", "<cmd>lua require('py.pytest').launchPytest()<CR>")
-  M.map("r", "<cmd>lua require('py.pytest').showPytestResult()<CR>")
+  -- Pytest Mappings
+  M.map("n", "t", "<cmd>lua require('py.pytest').launchPytest()<CR>")
+  M.map("n", "r", "<cmd>lua require('py.pytest').showPytestResult()<CR>")
 
   -- Poetry Mappings
-  M.map("d", "<cmd>lua require('py.poetry').addDependency()<CR>")
+  M.map("n", "d", "<cmd>lua require('py.poetry').addDependency()<CR>")
+
 end
 
 return M
