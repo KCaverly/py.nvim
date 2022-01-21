@@ -138,4 +138,11 @@ function M.sendHighlightsToIPython()
   end
 end
 
+function M.sendIPythonToBuffer()
+
+  local message = text_objects.getIPythonHighlighted()
+  print(message)
+
+end
+
 return M

@@ -1,4 +1,5 @@
 local ts_utils = require("nvim-treesitter.ts_utils")
+local utils = require("py.utils")
 
 local M = {}
 
@@ -72,25 +73,29 @@ function M.getImports()
 
 end
 
-local function visual_selection_range()
-
-  local _, csrow, cscol, _ = unpack(vim.fn.getpos("'<"))
-  local _, cerow, cecol, _ = unpack(vim.fn.getpos("'>"))
-
-  print(csrow)
-  print(cscol)
-  print(cerow)
-  print(cscol)
-
-  if csrow < cerow or (csrow == cerow and cscol <= cecol) then
-    return csrow - 1, cscol - 1, cerow - 1, cecol - 1
-  else
-    return cerow - 1, cecol - 1, csrow - 1, cscol - 1
-  end
-end
 
 function M.getHighlighted()
   return vim.fn.getreg("z")
 end
 
+
+function M.getIPythonHighlighted()
+
+  local text = M.getHighlighted()
+
+  local lines = utils.split(text, "\n")
+
+  new_lines = {}
+  for _, line in pairs(lines) do
+    print("LINE")
+    print(line)
+    line = string.gsub(line, "In .%d.%p%s", "")
+    line = string.gsub(line, "%s%s%s%p%p%p%p%s", "")
+    print(line)
+  end
+  
+end
+
+
 return M
+
