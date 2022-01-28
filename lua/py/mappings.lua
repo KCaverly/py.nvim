@@ -20,7 +20,7 @@ function M.set_mappings()
   M.map("n", "r", "<cmd>lua require('py.pytest').showPytestResult()<CR>")
 
   -- Poetry Mappings
-  M.map("n", "d", "<cmd>lua require('py.poetry').addDependency()<CR>")
+  M.map("n", "d", "<cmd>lua require('py.poetry').inputDependency()<CR>")
 
 end
 

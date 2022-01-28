@@ -74,6 +74,55 @@ function M.getImports()
 end
 
 
+function M.parsePythonObject(object_text)
+
+  if string.find(object_text, 'class ') ~= nil then
+    txt = string.gsub(object_text, 'class ', '')
+    txt = string.gsub(txt, '%(.*%):.*', '')
+    txt = string.gsub(txt, ':.*', '')
+    return {'class', txt}
+  elseif string.find(object_text, 'def ') ~= nil then
+    txt = string.gsub(object_text, 'def ', '')
+    txt = string.gsub(txt, '%(.*%):.*', '')
+    return {'function', txt}
+  end
+
+end
+
+function M.getPythonObject(object, search_name)
+
+  local root = ts_utils.get_root_for_position(1, 1, nil)
+  if root == nil then
+    return nil
+  end
+
+  local objects = {}
+  for k, v in pairs(ts_utils.get_named_children(root)) do
+
+    if v:type() == 'function_definition' and object == 'function' then
+
+      parsed = M.parsePythonObject(ts_utils.get_node_text(v)[1])
+
+      if search_name == parsed[2] then
+        return v
+      end
+
+    elseif v:type() == 'class_definition' and object == 'class' then
+
+      parsed = M.parsePythonObject(ts_utils.get_node_text(v)[1])
+
+      if search_name == parsed[2] then
+        return v
+      end
+      
+    end
+  end
+
+  return nil
+
+end
+
+
 function M.getHighlighted()
   return vim.fn.getreg("z")
 end
@@ -87,13 +136,18 @@ function M.getIPythonHighlighted()
 
   new_lines = {}
   for _, line in pairs(lines) do
-    print("LINE")
-    print(line)
     line = string.gsub(line, "In .%d.%p%s", "")
     line = string.gsub(line, "%s%s%s%p%p%p%p%s", "")
-    print(line)
+    table.insert(new_lines, line)
   end
   
+  return new_lines
+end
+
+function M.highlightNode(node, bufn)
+  --TODO: This doesnt Work 
+  local ns = vim.api.nvim_create_namespace('py.nvim')
+  ts_utils.highlight_node(node, bufn, ns, "Substitute")
 end
 
 
