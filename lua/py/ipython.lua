@@ -9,7 +9,8 @@ M.ipython = {
   win_id = nil,
   buf_id = nil,
   chan_id = nil,
-  launch_buf = nil
+  launch_buf = nil,
+  launch_win = nil
 }
 
 
@@ -66,6 +67,7 @@ function M.launchIPython()
       M.ipython.buf_id = bufn
       M.ipython.chan_id = chan
       M.ipython.launch_buf = launch_buf
+      M.ipython.launch_win = launch_win
     end
   })
 
@@ -74,6 +76,7 @@ function M.launchIPython()
   M.ipython.buf_id = bufn
   M.ipython.chan_id = chan
   M.ipython.launch_buf = launch_buf
+  M.ipython.launch_win = launch_win
 
   if config.ipython_send_imports() == 1 then
     vim.api.nvim_set_current_win(launch_win)
@@ -143,12 +146,16 @@ end
 
 function M.sendIPythonToBuffer()
 
+  print(M.ipython.launch_win)
   local message = text_objects.getIPythonHighlighted()
   local parsed = text_objects.parsePythonObject(message[1])
+  vim.api.nvim_set_current_win(M.ipython.launch_win)
   local node = text_objects.getPythonObject(parsed[1], parsed[2])
 
   -- TODO: Send Cursor to Node
-
+  print(parsed[1])
+  print(parsed[2])
+  print(node:type())
 
   text_objects.highlightNode(node, M.ipython.launch_buf)
 

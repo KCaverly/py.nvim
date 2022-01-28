@@ -145,9 +145,9 @@ function M.getIPythonHighlighted()
 end
 
 function M.highlightNode(node, bufn)
-  --TODO: This doesnt Work 
   local ns = vim.api.nvim_create_namespace('py.nvim')
-  ts_utils.highlight_node(node, bufn, ns, "Substitute")
+  ts_utils.goto_node(node)
+  ts_utils.highlight_node(node, bufn, ns, "TODO")
 end
 
 
