@@ -138,7 +138,9 @@ function M.getIPythonHighlighted()
   for _, line in pairs(lines) do
     line = string.gsub(line, "In .%d.%p%s", "")
     line = string.gsub(line, "%s%s%s%p%p%p%p%s", "")
+    line = string.gsub(line, "%s%s%s%p%p%p%p", "")
     table.insert(new_lines, line)
+
   end
   
   return new_lines

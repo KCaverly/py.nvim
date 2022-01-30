@@ -39,7 +39,7 @@ function M.launchIPython()
 
   -- Run Poetry Install Automatically
   if config.poetry_install_every() == 1 then
-    poetry.install()
+    poetry.installPoetry()
   end
 
   -- Navigate to the IPython

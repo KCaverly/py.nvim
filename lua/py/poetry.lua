@@ -5,6 +5,11 @@ local scan = require("plenary.scandir")
 local M = {}
 
 
+---------------------------
+-- General Functionality --
+---------------------------
+
+
 function M.findPoetry()
 
   -- Get Current Details
@@ -29,6 +34,55 @@ function M.findPoetry()
 
 end
 
+notify = require("notify")
+
+function M.showPoetry(package)
+
+  poetry_dir, _ = M.findPoetry()
+
+  if poetry_dir ~= nil then
+    Job:new({
+      command = "poetry",
+      args = {"show", package},
+      cwd = poetry_dir,
+      on_exit = function(j, return_val)
+
+        if return_val == 0 then
+          res = {}
+          for k, val in pairs(j:result()) do
+            table.insert(res, val)
+            print(val)
+          end
+          notify(res, "info", { title = "py.nvim" })
+        end
+        
+      end
+    }):start() 
+  end
+
+end
+
+
+function M.installPoetry()
+
+  poetry_dir, _ = M.findPoetry()
+
+  if poetry_dir ~= nil then
+    Job:new({
+      command = "poetry",
+      args = {"install"},
+      cwd = poetry_dir
+    })
+
+  end
+
+end
+
+
+------------------------------
+-- Dependency Functionality --
+------------------------------
+
 
 function M.parseDependency(package)
 
@@ -41,6 +95,7 @@ function M.parseDependency(package)
   return args
 
 end
+
 
 function M.addDependency(package, opts)
 
@@ -84,6 +139,7 @@ function M.addDependency(package, opts)
 
 end
 
+
 function M.inputDependency()
 
   vim.ui.input({ prompt = "Add Package: " },
@@ -92,16 +148,6 @@ function M.inputDependency()
     M.addDependency(package, {silent=false})
 
   end)
-
-end
-
-function M.install()
-
-  Job:new({
-    command = "poetry",
-    args = {"install"},
-    cwd = poetry_dir
-  }):start() 
 
 end
 
