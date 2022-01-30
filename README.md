@@ -1,5 +1,5 @@
 # py.nvim
-Simple Neovim Plugin for interactive development in Python.
+Simple Neovim Plugin for interactive development in Python with Poetry.
 
 Integrates primarily with Poetry Environments to manage Interactive REPLs, Dependency Management and Testing.
 
