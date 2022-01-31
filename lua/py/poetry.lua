@@ -34,30 +34,43 @@ function M.findPoetry()
 
 end
 
-notify = require("notify")
-
-function M.showPoetry(package)
+function M.showPackageDetails(package)
 
   poetry_dir, _ = M.findPoetry()
-
   if poetry_dir ~= nil then
+
     Job:new({
       command = "poetry",
       args = {"show", package},
       cwd = poetry_dir,
       on_exit = function(j, return_val)
-
+        
         if return_val == 0 then
           res = {}
           for k, val in pairs(j:result()) do
             table.insert(res, val)
-            print(val)
           end
-          notify(res, "info", { title = "py.nvim" })
+          require("notify")(res, "info", { title = "py.nvim" })
         end
-        
+
       end
-    }):start() 
+    }):start()
+
+  end
+
+end
+
+
+function M.showPackage()
+
+  poetry_dir, _ = M.findPoetry()
+
+  if poetry_dir ~= nil then
+
+    vim.ui.input({ prompt = "Show Package: "},
+    function(package)
+      M.showPackageDetails(package)
+    end)
   end
 
 end

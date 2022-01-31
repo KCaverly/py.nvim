@@ -17,7 +17,8 @@ from datetime import date
 
 
 def test_func(a=True):
-    print("testtstst")
+    print("small change")
+
 
 def test_func2(a):
     print(a + 2)
