@@ -155,10 +155,6 @@ end
 function M.replaceText(bufn, node, new_text)
 
   local rng, rng2, rng3, rng4 = ts_utils.get_node_range(node)
-  print(rng)
-  print(rng2)
-  print(rng3)
-  print(rng4)
 
   -- Delete text
   vim.api.nvim_buf_set_lines(bufn, rng, rng3+1, {}, new_text)
